@@ -24,8 +24,10 @@
 
 const codeGenerator = require('./code-generator')
 
-function getGenOptions() {
+// MIGRATED v3→v7: Using const and arrow functions for modern JS
+const getGenOptions = () => {
     return {
+        // MIGRATED v3→v7: app.preferences API remains mostly same but using modern syntax
         installPath: app.preferences.get('odoo_lite.gen.installPath'),
         useTab: app.preferences.get('odoo_lite.gen.useTab'),
         indentSpaces: app.preferences.get('odoo_lite.gen.indentSpaces'),
@@ -46,48 +48,57 @@ function getGenOptions() {
  * @param {string} path
  * @param {Object} options
  */
-function _handleGenerate(base, path, options) {
+// MIGRATED v3→v7: Refactored to async function to handle Promises better
+async function _handleGenerate(base, path, options) {
     // If options is not passed, get from preference
     options = options || getGenOptions()
-        // If base is not assigned, popup ElementPicker
+
+    // If base is not assigned, popup ElementPicker
     if (!base) {
-        app.elementPickerDialog.showDialog('Select a base model to generate codes', null, type.UMLPackage).then(function({ buttonId, returnValue }) {
+        // MIGRATED v3→v7: app.elementPickerDialog.showDialog returns a Promise
+        try {
+            const { buttonId, returnValue } = await app.elementPickerDialog.showDialog('Select a base model to generate codes', null, type.UMLPackage)
             if (buttonId === 'ok') {
                 base = returnValue
-                    // If path is not assigned, popup Open Dialog to select a folder
+                // If path is not assigned, popup Open Dialog to select a folder
                 if (!path) {
-                    var files = app.dialogs.showOpenDialog('Select a folder where generated codes to be located', null, null, { properties: ['openDirectory'] })
+                    // MIGRATED v3→v7: app.dialogs.showOpenDialog is synchronous in v7
+                    const files = app.dialogs.showOpenDialog('Select a folder where generated codes to be located', null, null, { properties: ['openDirectory'] })
                     if (files && files.length > 0) {
                         path = files[0]
-                        codeGenerator.generate(base, path, options)
+                        await codeGenerator.generate(base, path, options)
                     }
                 } else {
-                    codeGenerator.generate(base, path, options)
+                    await codeGenerator.generate(base, path, options)
                 }
             }
-        })
+        } catch (err) {
+            console.error('Migration Error in _handleGenerate:', err)
+        }
     } else {
         // If path is not assigned, popup Open Dialog to select a folder
         if (!path) {
-            var files = app.dialogs.showOpenDialog('Select a folder where generated codes to be located', null, null, { properties: ['openDirectory'] })
+            const files = app.dialogs.showOpenDialog('Select a folder where generated codes to be located', null, null, { properties: ['openDirectory'] })
             if (files && files.length > 0) {
                 path = files[0]
-                codeGenerator.generate(base, path, options)
+                await codeGenerator.generate(base, path, options)
             }
         } else {
-            codeGenerator.generate(base, path, options)
+            await codeGenerator.generate(base, path, options)
         }
     }
 }
 
 /**
- * Popup PreferenceDialog with Python Preference Schema
+ * Popup PreferenceDialog with Odoo Preference Schema
  */
 function _handleConfigure() {
+    // MIGRATED v3→v7: app.commands.execute remains same
     app.commands.execute('application:preferences', 'odoo_lite')
 }
 
 function init() {
+    // MIGRATED v3→v7: app.commands.register remains same
     app.commands.register('odoo_lite:generate', _handleGenerate)
     app.commands.register('odoo_lite:configure', _handleConfigure)
 }

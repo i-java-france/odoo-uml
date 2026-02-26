@@ -83,6 +83,24 @@ class OdooCodeGenerator {
     }
 
     /**
+     * MIGRATED v3→v7: Helper to replace missing app.repository.getRelationshipsOf
+     * Finds relationships involving the given element.
+     * @param {type.Model} elem
+     * @param {Function} filterFn
+     * @return {Array.<type.Model>}
+     */
+    _getRelationshipsOf(elem, filterFn) {
+        // v7 documentation doesn't list getRelationshipsOf, so we use select as fallback
+        const allRelationships = app.repository.select("@UMLRelationship")
+        return allRelationships.filter(rel => {
+            const isRelated = (rel.source === elem || rel.target === elem ||
+                (rel.end1 && rel.end1.reference === elem) ||
+                (rel.end2 && rel.end2.reference === elem))
+            return isRelated && (!filterFn || filterFn(rel))
+        })
+    }
+
+    /**
      * Return Indent String based on options
      * @param {Object} options
      * @return {string}
@@ -106,10 +124,11 @@ class OdooCodeGenerator {
      * @return {Array.<type.Model>}
      */
     getInherits(elem) {
-        var inherits = app.repository.getRelationshipsOf(elem, function (rel) {
+        // MIGRATED v3→v7: Replaced app.repository.getRelationshipsOf with helper and used arrow function
+        const inherits = this._getRelationshipsOf(elem, (rel) => {
             return (rel.source === elem && (rel instanceof type.UMLGeneralization || rel instanceof type.UMLInterfaceRealization))
         })
-        return inherits.map(function (gen) { return gen.target })
+        return inherits.map((gen) => { return gen.target })
     }
 
     /**
@@ -231,14 +250,14 @@ class OdooCodeGenerator {
      * @param {Object} options
      */
     writeConstructor(codeWriter, elem, options) {
-        var self = this
-        var hasBody = false
+        const self = this
+        let hasBody = false
         codeWriter.writeLine('def __init__(self):')
         codeWriter.indent()
 
         // from attributes
         if (elem.attributes.length > 0) {
-            elem.attributes.forEach(function (attr) {
+            elem.attributes.forEach((attr) => {
                 if (attr.isStatic === false) {
                     self.writeVariable(codeWriter, attr, options, true)
                     hasBody = true
@@ -247,12 +266,13 @@ class OdooCodeGenerator {
         }
 
         // from associations
-        var associations = app.repository.getRelationshipsOf(elem, function (rel) {
+        // MIGRATED v3→v7: Replaced app.repository.getRelationshipsOf with helper and used arrow function
+        const associations = this._getRelationshipsOf(elem, (rel) => {
             return (rel instanceof type.UMLAssociation)
         })
         console.log(associations);
-        for (var i = 0, len = associations.length; i < len; i++) {
-            var asso = associations[i]
+        for (let i = 0, len = associations.length; i < len; i++) {
+            const asso = associations[i]
             // if (asso.end1.reference === elem && asso.end2.navigable === true) {
             if (asso.end1.reference === elem) {
                 self.writeVariable(codeWriter, asso.end2, options)
@@ -677,14 +697,15 @@ class OdooCodeGenerator {
         codeWriter.writeLine()
 
         // from associations: Many2one, One2many, Many2many
-        var associations = app.repository.getRelationshipsOf(elem, function (rel) {
+        // MIGRATED v3→v7: Replaced app.repository.getRelationshipsOf with helper and used arrow function
+        const associations = this._getRelationshipsOf(elem, (rel) => {
             return (rel instanceof type.UMLAssociation)
         })
         console.log(associations);
 
         //looping associations
-        for (var i = 0, len = associations.length; i < len; i++) {
-            var asso = associations[i]
+        for (let i = 0, len = associations.length; i < len; i++) {
+            const asso = associations[i]
             // if (asso.end1.reference === elem && asso.end2.navigable === true) {
             if (asso.end1.reference === elem) {
                 // end1 = class ini => Many2one
@@ -1456,7 +1477,8 @@ class OdooCodeGenerator {
             var comodel_m2o_fields = []
 
             var end1 = field._parent.end1.reference
-            var associations = app.repository.getRelationshipsOf(end1, function (rel) {
+            // MIGRATED v3→v7: Replaced app.repository.getRelationshipsOf with helper and used arrow function
+            const associations = this._getRelationshipsOf(end1, (rel) => {
                 return (rel instanceof type.UMLAssociation)
             })
             xmlWriter.writeLine('<h2>' + self.sentenceCase(field.name, options) + '</h2>')
@@ -1584,21 +1606,27 @@ class OdooCodeGenerator {
      * @param {string} path
      * @param {Object} options
      */
-    generate(elem, basePath, options, folderName, inheritedModule, sequence) {
+    // MIGRATED v3→v7: Refactored to async function to replace $.Deferred/promise()
+    async generate(elem, basePath, options, folderName, inheritedModule, sequence) {
 
-        var result = new $.Deferred()
-        var fullPath, codeWriter, xmlWriter, file
-
+        let fullPath, codeWriter, xmlWriter, file
 
         // Package (a directory with __init__.py)
         if (elem instanceof type.UMLPackage) {
             fullPath = path.join(basePath, elem.name)
-            fs.mkdirSync(fullPath)
+            // Added check to avoid EEXIST errors
+            if (!fs.existsSync(fullPath)) {
+                fs.mkdirSync(fullPath)
+            }
             file = path.join(fullPath, '__init__.py')
-            fs.writeFileSync(file, '')
-            elem.ownedElements.forEach(child => {
-                this.generate(child, fullPath, options)
-            })
+            if (!fs.existsSync(file)) {
+                fs.writeFileSync(file, '')
+            }
+
+            // MIGRATED v3→v7: Using for...of to correctly await recursive calls
+            for (const child of elem.ownedElements) {
+                await this.generate(child, fullPath, options)
+            }
 
             // Class for each diagram elements
         } else if (elem instanceof type.UMLClass || elem instanceof type.UMLInterface) {
@@ -1645,9 +1673,8 @@ class OdooCodeGenerator {
 
             // Others (Nothing generated.)
         } else {
-            result.resolve()
+            // Nothing to do
         }
-        return result.promise()
     }
 
     lowerFirst(string) {
@@ -1732,53 +1759,63 @@ class OdooCodeGenerator {
  * @param {string} basePath
  * @param {Object} options
  */
-function generate(baseModel, basePath, options) {
-    var fullPath, xmlWriter
-    var iconName = options.iconName
+// MIGRATED v3→v7: Refactored to async function and added existence checks
+async function generate(baseModel, basePath, options) {
+    let fullPath, xmlWriter
+    const iconName = options.iconName
 
     // -------- write main addon folders
-    var odooCodeGenerator = new OdooCodeGenerator(baseModel, basePath)
-    fullPath = basePath + '/' + baseModel.name
-    fs.mkdirSync(fullPath)
-    fs.mkdirSync(fullPath + '/model')
-    fs.mkdirSync(fullPath + '/view')
-    fs.mkdirSync(fullPath + '/security')
-    fs.mkdirSync(fullPath + '/report')
-    fs.mkdirSync(fullPath + '/static')
-    fs.mkdirSync(fullPath + '/static/description')
-    fs.mkdirSync(fullPath + '/static/js')
-    fs.mkdirSync(fullPath + '/static/xml')
-    fs.mkdirSync(fullPath + '/data')
+    const odooCodeGenerator = new OdooCodeGenerator(baseModel, basePath)
+    fullPath = path.join(basePath, baseModel.name)
+    
+    // Helper to safely create directory
+    const mkdirSafe = (dirPath) => {
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath)
+        }
+    }
+
+    mkdirSafe(fullPath)
+    mkdirSafe(path.join(fullPath, 'model'))
+    mkdirSafe(path.join(fullPath, 'view'))
+    mkdirSafe(path.join(fullPath, 'security'))
+    mkdirSafe(path.join(fullPath, 'report'))
+    mkdirSafe(path.join(fullPath, 'static'))
+    mkdirSafe(path.join(fullPath, 'static/description'))
+    mkdirSafe(path.join(fullPath, 'static/js'))
+    mkdirSafe(path.join(fullPath, 'static/xml'))
+    mkdirSafe(path.join(fullPath, 'data'))
 
     //--------- copy menu icon 
     if (iconName) {
-        fs.copyFile(__dirname + "/icons/" + iconName + ".png", fullPath + '/static/description/icon.png', function (err) {
-            if (err) console.error('Error copying icon:', err)
-            else console.log('done copy')
-        })
+        try {
+            // MIGRATED v3→v7: Using copyFileSync for simplicity since it's synchronous logic
+            fs.copyFileSync(path.join(__dirname, "icons", iconName + ".png"), path.join(fullPath, 'static/description/icon.png'))
+            console.log('done copy')
+        } catch (err) {
+            console.error('Error copying icon:', err)
+        }
     }
 
 
     // ------------- write app top menu 
     xmlWriter = new codegen.CodeWriter('\t')
     odooCodeGenerator.writeTopMenuXML(xmlWriter, options, baseModel.name)
-    fs.writeFileSync(fullPath + '/view/menu.xml', xmlWriter.getData())
+    fs.writeFileSync(path.join(fullPath, 'view/menu.xml'), xmlWriter.getData())
 
     // ---------------- write __manifetst__
-    codeWriter = new codegen.CodeWriter('\t')
+    let codeWriter = new codegen.CodeWriter('\t')
     odooCodeGenerator.writeManifest(codeWriter, baseModel.ownedElements, options, baseModel.name, false)
-    fs.writeFileSync(fullPath + '/__manifest__.py', codeWriter.getData())
+    fs.writeFileSync(path.join(fullPath, '__manifest__.py'), codeWriter.getData())
 
     // --------------- write __init__.py on addon folder
     codeWriter = new codegen.CodeWriter('\t')
     codeWriter.writeLine(options.installPath)
     codeWriter.writeLine('from . import model')
-    fs.writeFileSync(fullPath + '/__init__.py', codeWriter.getData())
+    fs.writeFileSync(path.join(fullPath, '__init__.py'), codeWriter.getData())
 
     // ---------------- write ir.model.access.csv on security folder
-
     odooCodeGenerator.writeModelAccess(fullPath, baseModel.ownedElements, baseModel.name, options)
-
 
     // ---------------- write groups.xml on security folder
     odooCodeGenerator.writeGroupsXML(fullPath, options)
@@ -1787,18 +1824,15 @@ function generate(baseModel, basePath, options) {
     codeWriter = new codegen.CodeWriter('\t')
     codeWriter.writeLine(options.installPath)
     odooCodeGenerator.writeInit(codeWriter, baseModel.ownedElements, options)
-    fs.writeFileSync(fullPath + '/model/__init__.py', codeWriter.getData())
+    fs.writeFileSync(path.join(fullPath, 'model/__init__.py'), codeWriter.getData())
 
     // ---------------- generate py files for each elements
-    var sequence = 10
-    baseModel.ownedElements.forEach(child => {
-        odooCodeGenerator.generate(child, fullPath, options, baseModel.name, false, sequence)
+    let sequence = 10
+    // MIGRATED v3→v7: Using for...of for async execution
+    for (const child of baseModel.ownedElements) {
+        await odooCodeGenerator.generate(child, fullPath, options, baseModel.name, false, sequence)
         sequence += 10
-    })
-
-
-
-
+    }
 }
 
 exports.generate = generate

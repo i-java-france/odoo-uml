@@ -4,7 +4,9 @@
     "description": "Odoo code generator lite",
     "homepage": "https://github.com/akhdaniel/staruml-odoo",
     "issues": "https://github.com/akhdaniel/staruml-odoo/issues",
-    "keywords": ["odoo"],
+    "keywords": [
+        "odoo"
+    ],
     "version": "0.9.1",
     "author": {
         "name": "Akhmad D. Sembiring",
@@ -13,6 +15,6 @@
     },
     "license": "MIT",
     "engines": {
-        "staruml": "^3.0.0"
+        "staruml": "^7.0.0"
     }
 }
