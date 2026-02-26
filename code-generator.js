@@ -495,7 +495,7 @@ class OdooCodeGenerator {
         var line = ''
         var addonName = folderName
         var appName = options.appName
-        var depends = options.depends
+        var depends = options.depends || "'base'"
 
         codeWriter.writeLine('#-*- coding: utf-8 -*-')
         codeWriter.writeLine()
@@ -506,7 +506,10 @@ class OdooCodeGenerator {
         codeWriter.writeLine('"version": "1.0", ')
         codeWriter.writeLine('"depends": [')
         codeWriter.indent()
-        codeWriter.writeLine(depends + ",")
+        var dependsList = depends.split(',').map(function (d) { return d.trim() }).filter(function (d) { return d })
+        dependsList.forEach(function (dep) {
+            codeWriter.writeLine(dep + ',')
+        })
         if (inheritedModule) {
             codeWriter.writeLine("'" + folderName + "'")
         }
