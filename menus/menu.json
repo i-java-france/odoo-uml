@@ -2,7 +2,7 @@
     "menu": [{
         "id": "tools",
         "submenu": [{
-            "label": "Odoo Lite",
+            "label": "Odoo Lite V16",
             "id": "tools.odoo_lite",
             "submenu": [
                 { "label": "Generate Code...", "id": "tools.odoo_lite.generate", "command": "odoo_lite:generate" },

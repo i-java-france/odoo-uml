@@ -1,6 +1,6 @@
 {
     "id": "odoo_lite",
-    "name": "Odoo Lite",
+    "name": "Odoo Lite V16",
     "schema": {
         "odoo.gen": {
             "text": "Odoo Code Generation",
