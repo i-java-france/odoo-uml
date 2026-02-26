@@ -821,7 +821,8 @@ class OdooCodeGenerator {
             }
         })
 
-        var associations = app.repository.getRelationshipsOf(elem, function (rel) {
+        // MIGRATED v3→v7: Replaced app.repository.getRelationshipsOf with helper
+        const associations = this._getRelationshipsOf(elem, (rel) => {
             return (rel instanceof type.UMLAssociation)
         })
 
@@ -1105,7 +1106,8 @@ class OdooCodeGenerator {
             }
         })
 
-        var associations = app.repository.getRelationshipsOf(elem, function (rel) {
+        // MIGRATED v3→v7: Replaced app.repository.getRelationshipsOf with helper
+        const associations = this._getRelationshipsOf(elem, (rel) => {
             return (rel instanceof type.UMLAssociation)
         })
         //looping associations
@@ -1373,7 +1375,8 @@ class OdooCodeGenerator {
             }
         })
 
-        var associations = app.repository.getRelationshipsOf(elem, function (rel) {
+        // MIGRATED v3→v7: Replaced app.repository.getRelationshipsOf with helper
+        const associations = this._getRelationshipsOf(elem, (rel) => {
             return (rel instanceof type.UMLAssociation)
         })
         //looping associations
@@ -1472,7 +1475,8 @@ class OdooCodeGenerator {
         xmlWriter.writeLine('<div class="oe_structure"/>')
 
 
-        o2m_fields.forEach(function (field) {
+        // MIGRATED v3→v7: Changed forEach to use arrow function so 'this' is lexically inherited
+        o2m_fields.forEach((field) => {
             var comodel_normal_fields = field._parent.end1.reference.attributes
             var comodel_m2o_fields = []
 
@@ -1767,7 +1771,7 @@ async function generate(baseModel, basePath, options) {
     // -------- write main addon folders
     const odooCodeGenerator = new OdooCodeGenerator(baseModel, basePath)
     fullPath = path.join(basePath, baseModel.name)
-    
+
     // Helper to safely create directory
     const mkdirSafe = (dirPath) => {
         if (!fs.existsSync(dirPath)) {
