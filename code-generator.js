@@ -106,10 +106,10 @@ class OdooCodeGenerator {
      * @return {Array.<type.Model>}
      */
     getInherits(elem) {
-        var inherits = app.repository.getRelationshipsOf(elem, function (rel) {
+        var inherits = app.repository.getRelationshipsOf(elem, function(rel) {
             return (rel.source === elem && (rel instanceof type.UMLGeneralization || rel instanceof type.UMLInterfaceRealization))
         })
-        return inherits.map(function (gen) { return gen.target })
+        return inherits.map(function(gen) { return gen.target })
     }
 
     /**
@@ -146,7 +146,7 @@ class OdooCodeGenerator {
      * dijalankan per field elem 
      */
     writeVariable(codeWriter, elem, options, isClassVar, inverse_field, stateExist) {
-        var addonName = options.addonName || "my_addon"
+        var addonName = options.addonName
 
         if (elem.name.length > 0) {
             var line
@@ -163,10 +163,10 @@ class OdooCodeGenerator {
             // relational fields
             else if (elem.multiplicity && ['0..*', '1..*', '*', '1'].includes(elem.multiplicity.trim())) {
                 line = elem.name
-                // attribut = fields.Many2one(comodel_name="addon.refference",
+                    // attribut = fields.Many2one(comodel_name="addon.refference",
                 if (elem.multiplicity == '0..*') {
                     line += ' = fields.Many2one(comodel_name="' + this.getModelName(inverse_field.reference, options, ".") + '", '
-                    // line += ' = fields.Many2one(comodel_name="'+addonName + '.' + inverse_field.reference.name + '", '
+                        // line += ' = fields.Many2one(comodel_name="'+addonName + '.' + inverse_field.reference.name + '", '
                 }
                 // attribut = fields.One2many(comodel_name="addon.refference", inverse_name="" 
                 else if (elem.multiplicity == '1') {
@@ -238,7 +238,7 @@ class OdooCodeGenerator {
 
         // from attributes
         if (elem.attributes.length > 0) {
-            elem.attributes.forEach(function (attr) {
+            elem.attributes.forEach(function(attr) {
                 if (attr.isStatic === false) {
                     self.writeVariable(codeWriter, attr, options, true)
                     hasBody = true
@@ -247,13 +247,13 @@ class OdooCodeGenerator {
         }
 
         // from associations
-        var associations = app.repository.getRelationshipsOf(elem, function (rel) {
+        var associations = app.repository.getRelationshipsOf(elem, function(rel) {
             return (rel instanceof type.UMLAssociation)
         })
         console.log(associations);
         for (var i = 0, len = associations.length; i < len; i++) {
             var asso = associations[i]
-            // if (asso.end1.reference === elem && asso.end2.navigable === true) {
+                // if (asso.end1.reference === elem && asso.end2.navigable === true) {
             if (asso.end1.reference === elem) {
                 self.writeVariable(codeWriter, asso.end2, options)
                 hasBody = true
@@ -290,7 +290,7 @@ class OdooCodeGenerator {
 
             // params
             var params = elem.getNonReturnParameters()
-            var paramStr = params.map(function (p) { return p.name }).join(', ')
+            var paramStr = params.map(function(p) { return p.name }).join(', ')
 
             if (elem.isStatic) {
                 codeWriter.writeLine('@classmethod')
@@ -315,29 +315,29 @@ class OdooCodeGenerator {
      * @param {boolean} skipParams
      */
     writeCreateMethod(codeWriter, className, objectName, options, withSequence) {
-        var odooVersion = options.odooVersion
-        codeWriter.writeLine()
+            var odooVersion = options.odooVersion
+            codeWriter.writeLine()
 
-        codeWriter.writeLine('@api.model')
-        codeWriter.writeLine('def create(self, vals):')
-        codeWriter.indent()
-        if (withSequence) {
-            codeWriter.writeLine('if not vals.get("name", False) or vals["name"] == "New":')
+            codeWriter.writeLine('@api.model')
+            codeWriter.writeLine('def create(self, vals):')
             codeWriter.indent()
-            codeWriter.writeLine('vals["name"] = self.env["ir.sequence"].next_by_code("' + objectName + '") or "Error Number!!!"')
+            if (withSequence) {
+                codeWriter.writeLine('if not vals.get("name", False) or vals["name"] == "New":')
+                codeWriter.indent()
+                codeWriter.writeLine('vals["name"] = self.env["ir.sequence"].next_by_code("' + objectName + '") or "Error Number!!!"')
+                codeWriter.outdent()
+            }
+            codeWriter.writeLine('return super(' + className + ', self).create(vals)')
             codeWriter.outdent()
         }
-        codeWriter.writeLine('return super(' + className + ', self).create(vals)')
-        codeWriter.outdent()
-    }
-    /**
-     * Write Action Method
-     * @param {StringWriter} codeWriter
-     * @param {type.Model} elem
-     * @param {Object} options
-     * @param {boolean} skipBody
-     * @param {boolean} skipParams
-     */
+        /**
+         * Write Action Method
+         * @param {StringWriter} codeWriter
+         * @param {type.Model} elem
+         * @param {Object} options
+         * @param {boolean} skipBody
+         * @param {boolean} skipParams
+         */
     writeActionMethod(codeWriter, className, objectName, options) {
 
         var odooVersion = options.odooVersion
@@ -411,7 +411,7 @@ class OdooCodeGenerator {
     writeInit(codeWriter, ownedElements, options) {
         var self = this
         var line = ''
-        var addonName = options.addonName || "my_addon"
+        var addonName = options.addonName
         ownedElements.forEach(child => {
             if (child instanceof type.UMLClass) {
                 codeWriter.writeLine('from . import ' + child.name)
@@ -423,7 +423,7 @@ class OdooCodeGenerator {
     writeModelAccess(fullPath, ownedElements, folderName, options) {
         var self = this
         var codeWriter = new codegen.CodeWriter('\t')
-        var appName = options.appName || folderName
+        var appName = options.appName
         var appNameLower = appName.toLowerCase()
         var userGroup = folderName + '.group_' + appNameLower + '_user'
         var managerGroup = folderName + '.group_' + appNameLower + '_manager'
@@ -451,7 +451,7 @@ class OdooCodeGenerator {
 
 
     writeGroupsXML(fullPath, options) {
-        var appName = options.appName || "Odoo App"
+        var appName = options.appName
         var appNameLower = appName.toLowerCase()
 
         var xmlWriter = new codegen.CodeWriter('\t')
@@ -491,132 +491,132 @@ class OdooCodeGenerator {
     }
 
     writeManifest(codeWriter, ownedElements, options, folderName, inheritedModule) {
-        var self = this
-        var line = ''
-        var addonName = folderName
-        var appName = options.appName
-        var depends = options.depends
+            var self = this
+            var line = ''
+            var addonName = folderName
+            var appName = options.appName
+            var depends = options.depends
 
-        codeWriter.writeLine('#-*- coding: utf-8 -*-')
-        codeWriter.writeLine()
+            codeWriter.writeLine('#-*- coding: utf-8 -*-')
+            codeWriter.writeLine()
 
-        codeWriter.writeLine('{')
-        codeWriter.indent()
-        codeWriter.writeLine('"name": "' + (appName || folderName) + (inheritedModule ? " Inherited" : "") + '",')
-        codeWriter.writeLine('"version": "1.0", ')
-        codeWriter.writeLine('"depends": [')
-        codeWriter.indent()
-        codeWriter.writeLine((depends || "'base'") + ",")
-        if (inheritedModule) {
-            codeWriter.writeLine("'" + folderName + "'")
-        }
-        codeWriter.outdent()
-        codeWriter.writeLine('],')
-        codeWriter.writeLine('"author": "Akhmad D. Sembiring [vitraining.com]",')
-        codeWriter.writeLine('"category": "Utility",')
-        codeWriter.writeLine('"website": "http://vitraining.com",')
-        codeWriter.writeLine('"images": ["static/description/images/main_screenshot.jpg"],')
-        codeWriter.writeLine('"price": "10",')
-        codeWriter.writeLine('"license": "OPL-1",')
-        codeWriter.writeLine('"currency": "USD",')
-        codeWriter.writeLine('"summary": "This is the ' + appName + ' module generated by StarUML Odoo Generator Pro Version",')
-        codeWriter.writeLine('"description": """')
-        codeWriter.outdent()
-        codeWriter.writeLine()
-        codeWriter.writeLine('Information')
-        codeWriter.writeLine('======================================================================')
-        codeWriter.writeLine()
-        codeWriter.writeLine('* created menus')
-        codeWriter.writeLine('* created objects')
-        codeWriter.writeLine('* created views')
-        codeWriter.writeLine('* logics')
-        codeWriter.writeLine()
-        codeWriter.writeLine('""",')
-        codeWriter.indent()
-        codeWriter.writeLine('"data": [')
-        codeWriter.indent()
+            codeWriter.writeLine('{')
+            codeWriter.indent()
+            codeWriter.writeLine('"name": "' + appName + (inheritedModule ? " Inherited" : "") + '",')
+            codeWriter.writeLine('"version": "1.0", ')
+            codeWriter.writeLine('"depends": [')
+            codeWriter.indent()
+            codeWriter.writeLine(depends + ",")
+            if (inheritedModule) {
+                codeWriter.writeLine("'" + folderName + "'")
+            }
+            codeWriter.outdent()
+            codeWriter.writeLine('],')
+            codeWriter.writeLine('"author": "Akhmad D. Sembiring [vitraining.com]",')
+            codeWriter.writeLine('"category": "Utility",')
+            codeWriter.writeLine('"website": "http://vitraining.com",')
+            codeWriter.writeLine('"images": ["static/description/images/main_screenshot.jpg"],')
+            codeWriter.writeLine('"price": "10",')
+            codeWriter.writeLine('"license": "OPL-1",')
+            codeWriter.writeLine('"currency": "USD",')
+            codeWriter.writeLine('"summary": "This is the ' + appName + ' module generated by StarUML Odoo Generator Pro Version",')
+            codeWriter.writeLine('"description": """')
+            codeWriter.outdent()
+            codeWriter.writeLine()
+            codeWriter.writeLine('Information')
+            codeWriter.writeLine('======================================================================')
+            codeWriter.writeLine()
+            codeWriter.writeLine('* created menus')
+            codeWriter.writeLine('* created objects')
+            codeWriter.writeLine('* created views')
+            codeWriter.writeLine('* logics')
+            codeWriter.writeLine()
+            codeWriter.writeLine('""",')
+            codeWriter.indent()
+            codeWriter.writeLine('"data": [')
+            codeWriter.indent()
 
-        if (!inheritedModule) {
-            codeWriter.writeLine('"security/groups.xml",')
-            codeWriter.writeLine('"security/ir.model.access.csv",')
-            codeWriter.writeLine('"view/menu.xml",')
+            if (!inheritedModule) {
+                codeWriter.writeLine('"security/groups.xml",')
+                codeWriter.writeLine('"security/ir.model.access.csv",')
+                codeWriter.writeLine('"view/menu.xml",')
 
-            ownedElements.forEach(child => {
-                if (child instanceof type.UMLClass) {
-                    var is_inherit = self.checkInherit(child)
-                    if (!is_inherit) {
-                        codeWriter.writeLine('"view/' + child.name + '.xml",')
-                    } else {
-                        codeWriter.writeLine('"view/' + child.name + '.xml", #inherited')
+                ownedElements.forEach(child => {
+                    if (child instanceof type.UMLClass) {
+                        var is_inherit = self.checkInherit(child)
+                        if (!is_inherit) {
+                            codeWriter.writeLine('"view/' + child.name + '.xml",')
+                        } else {
+                            codeWriter.writeLine('"view/' + child.name + '.xml", #inherited')
+                        }
+
+
+                        // sequence 
+                        var state_field_exist = false
+                            // get fields names
+                        child.attributes.forEach(function(attr) {
+                            if (attr.name === 'state') {
+                                state_field_exist = true
+                            }
+                        })
+
+                        if (state_field_exist)
+                            codeWriter.writeLine('"data/sequence_' + child.name + '.xml",')
                     }
+                })
 
 
-                    // sequence 
-                    var state_field_exist = false
-                    // get fields names
-                    child.attributes.forEach(function (attr) {
-                        if (attr.name === 'state') {
-                            state_field_exist = true
-                        }
-                    })
+                ownedElements.forEach(child => {
+                    if (child instanceof type.UMLClass) {
+                        codeWriter.writeLine('"report/' + child.name + '.xml",')
+                    }
+                })
 
-                    if (state_field_exist)
-                        codeWriter.writeLine('"data/sequence_' + child.name + '.xml",')
-                }
-            })
+            } else {
+                //inherirted module
 
+                ownedElements.forEach(child => {
+                    if (child instanceof type.UMLClass) {
+                        codeWriter.writeLine('# "view/' + child.name + '.xml",')
 
-            ownedElements.forEach(child => {
-                if (child instanceof type.UMLClass) {
-                    codeWriter.writeLine('"report/' + child.name + '.xml",')
-                }
-            })
+                        var state_field_exist = false
+                        child.attributes.forEach(function(attr) {
+                            if (attr.name === 'state') {
+                                state_field_exist = true
+                            }
+                        })
 
-        } else {
-            //inherirted module
+                        if (state_field_exist)
+                            codeWriter.writeLine('# "data/sequence_' + child.name + '.xml",')
+                    }
+                })
+            }
 
-            ownedElements.forEach(child => {
-                if (child instanceof type.UMLClass) {
-                    codeWriter.writeLine('# "view/' + child.name + '.xml",')
-
-                    var state_field_exist = false
-                    child.attributes.forEach(function (attr) {
-                        if (attr.name === 'state') {
-                            state_field_exist = true
-                        }
-                    })
-
-                    if (state_field_exist)
-                        codeWriter.writeLine('# "data/sequence_' + child.name + '.xml",')
-                }
-            })
+            codeWriter.outdent()
+            codeWriter.writeLine('],')
+            codeWriter.writeLine('"installable": True,')
+            codeWriter.writeLine('"auto_install": False,')
+            codeWriter.writeLine('"application": True,')
+            codeWriter.outdent()
+            codeWriter.writeLine('}')
         }
-
-        codeWriter.outdent()
-        codeWriter.writeLine('],')
-        codeWriter.writeLine('"installable": True,')
-        codeWriter.writeLine('"auto_install": False,')
-        codeWriter.writeLine('"application": True,')
-        codeWriter.outdent()
-        codeWriter.writeLine('}')
-    }
-    /**
-     * Write Class per model 
-     * @param {StringWriter} codeWriter
-     * @param {type.Model} elem
-     * @param {Object} options
-     */
+        /**
+         * Write Class per model 
+         * @param {StringWriter} codeWriter
+         * @param {type.Model} elem
+         * @param {Object} options
+         */
     writeClass(codeWriter, elem, options) {
         var self = this
         var line = ''
-        var addonName = options.addonName || "my_addon"
+        var addonName = options.addonName
         var odooVersion = options.odooVersion
         var stateExist = false
         var className = elem.name
         var objectName = ''
 
         // cek state exists ?
-        elem.attributes.forEach(function (attr) {
+        elem.attributes.forEach(function(attr) {
             if (attr.name === 'state') {
                 stateExist = true
                 codeWriter.writeLine('STATES = [' + attr.defaultValue + ']')
@@ -651,14 +651,14 @@ class OdooCodeGenerator {
 
 
             //write fields 
-            elem.attributes.forEach(function (attr) {
+            elem.attributes.forEach(function(attr) {
                 self.writeVariable(codeWriter, attr, options, true, false, stateExist)
             })
             codeWriter.writeLine()
 
             // Methods
             if (elem.operations.length > 0) {
-                elem.operations.forEach(function (op) {
+                elem.operations.forEach(function(op) {
                     self.writeMethod(codeWriter, op, options)
                 })
             }
@@ -674,7 +674,7 @@ class OdooCodeGenerator {
         codeWriter.writeLine()
 
         // from associations: Many2one, One2many, Many2many
-        var associations = app.repository.getRelationshipsOf(elem, function (rel) {
+        var associations = app.repository.getRelationshipsOf(elem, function(rel) {
             return (rel instanceof type.UMLAssociation)
         })
         console.log(associations);
@@ -682,7 +682,7 @@ class OdooCodeGenerator {
         //looping associations
         for (var i = 0, len = associations.length; i < len; i++) {
             var asso = associations[i]
-            // if (asso.end1.reference === elem && asso.end2.navigable === true) {
+                // if (asso.end1.reference === elem && asso.end2.navigable === true) {
             if (asso.end1.reference === elem) {
                 // end1 = class ini => Many2one
                 self.writeVariable(codeWriter, asso.end1, options, true, asso.end2, stateExist)
@@ -713,11 +713,11 @@ class OdooCodeGenerator {
     writeInheritedClass(codeWriter, elem, options) {
         var self = this
         var line = ''
-        var addonName = options.addonName || "my_addon"
+        var addonName = options.addonName
         var state_field_exist = false
 
         // get fields names
-        elem.attributes.forEach(function (attr) {
+        elem.attributes.forEach(function(attr) {
             if (attr.name === 'state') {
                 state_field_exist = true
                 codeWriter.writeLine('STATES = [' + attr.defaultValue + ']')
@@ -749,7 +749,7 @@ class OdooCodeGenerator {
         }
         // Methods
         if (elem.operations.length > 0) {
-            elem.operations.forEach(function (op) {
+            elem.operations.forEach(function(op) {
                 self.writeMethod(codeWriter, op, options)
             })
         }
@@ -765,7 +765,7 @@ class OdooCodeGenerator {
         var o2m_fields = []
         var m2o_fields = []
         var m2m_fields = []
-        var addonName = options.addonName || folderName || "my_addon"
+        var addonName = options.addonName
         var odooVersion = options.odooVersion
         var model_name_underscore = this.getModelName(elem, options, '_')
         var model_name_dot = this.getModelName(elem, options, '.')
@@ -778,7 +778,7 @@ class OdooCodeGenerator {
         var elem_name = elem.name
 
         // get fields names
-        elem.attributes.forEach(function (attr) {
+        elem.attributes.forEach(function(attr) {
             if (attr.name !== '' && attr.name !== undefined && attr.name != '_name' && attr.name != '_inherit') {
                 normal_fields.push(attr)
 
@@ -797,14 +797,14 @@ class OdooCodeGenerator {
             }
         })
 
-        var associations = app.repository.getRelationshipsOf(elem, function (rel) {
+        var associations = app.repository.getRelationshipsOf(elem, function(rel) {
             return (rel instanceof type.UMLAssociation)
         })
 
         //looping associations
         for (var i = 0, len = associations.length; i < len; i++) {
             var asso = associations[i]
-            // if (asso.end1.reference === elem && asso.end2.navigable === true) {
+                // if (asso.end1.reference === elem && asso.end2.navigable === true) {
             if (asso.end1.reference === elem) {
                 // end1 = class ini => Many2one
                 if (asso.end1.name !== "" && asso.end1.name !== undefined) {
@@ -850,32 +850,20 @@ class OdooCodeGenerator {
             xmlWriter.indent()
             xmlWriter.writeLine('<field name="name">' + model_name_underscore + '_tree</field>')
             xmlWriter.writeLine('<field name="model">' + model_name_dot + '</field>')
-            if (odooVersion >= 17) {
-                xmlWriter.writeLine('<field name="type">list</field>')
-            } else {
-                xmlWriter.writeLine('<field name="type">tree</field>')
-            }
+            xmlWriter.writeLine('<field name="type">tree</field>')
             xmlWriter.writeLine('<field name="priority" eval="8"/>')
             xmlWriter.writeLine('<field name="arch" type="xml">')
             xmlWriter.indent()
-            if (odooVersion >= 17) {
-                xmlWriter.writeLine('<list string="' + model_name_title + '">')
-            } else {
-                xmlWriter.writeLine('<tree string="' + model_name_title + '">')
-            }
+            xmlWriter.writeLine('<tree string="' + model_name_title + '">')
             xmlWriter.indent()
-            normal_fields.forEach(function (field) {
+            normal_fields.forEach(function(field) {
                 xmlWriter.writeLine('<field name="' + field.name + '" />')
             })
-            m2o_fields.forEach(function (field) {
+            m2o_fields.forEach(function(field) {
                 xmlWriter.writeLine('<field name="' + field.name + '" />')
             })
             xmlWriter.outdent()
-            if (odooVersion >= 17) {
-                xmlWriter.writeLine('</list>')
-            } else {
-                xmlWriter.writeLine('</tree>')
-            }
+            xmlWriter.writeLine('</tree>')
             xmlWriter.outdent()
             xmlWriter.writeLine('</field>')
             xmlWriter.outdent()
@@ -927,7 +915,7 @@ class OdooCodeGenerator {
             xmlWriter.indent()
             xmlWriter.writeLine('<group>')
             xmlWriter.indent()
-            normal_fields.forEach(function (field) {
+            normal_fields.forEach(function(field) {
                 if (field.name !== 'name' && field.name !== 'state') {
                     xmlWriter.writeLine('<field name="' + field.name + '" />')
                 }
@@ -937,10 +925,10 @@ class OdooCodeGenerator {
 
             xmlWriter.writeLine('<group>')
             xmlWriter.indent()
-            m2o_fields.forEach(function (field) {
+            m2o_fields.forEach(function(field) {
                 xmlWriter.writeLine('<field name="' + field.name + '" />')
             })
-            m2m_fields.forEach(function (field) {
+            m2m_fields.forEach(function(field) {
                 xmlWriter.writeLine('<field name="' + field.name + '" widget="many2many_tags"/>')
             })
             xmlWriter.outdent()
@@ -950,7 +938,7 @@ class OdooCodeGenerator {
 
             xmlWriter.writeLine('<notebook>')
             xmlWriter.indent()
-            o2m_fields.forEach(function (field) {
+            o2m_fields.forEach(function(field) {
                 xmlWriter.writeLine('<page name="' + field.name + '" string="' + self.sentenceCase(field.name, options) + '">')
                 xmlWriter.indent()
                 xmlWriter.writeLine('<field name="' + field.name + '"/>')
@@ -984,11 +972,7 @@ class OdooCodeGenerator {
             if (odooVersion < 12) {
                 xmlWriter.writeLine('<field name="view_type">form</field>')
             }
-            if (odooVersion >= 17) {
-                line = '<field name="view_mode">list,form'
-            } else {
-                line = '<field name="view_mode">tree,form'
-            }
+            line = '<field name="view_mode">tree,form'
 
 
             line += '</field>'
@@ -1030,7 +1014,7 @@ class OdooCodeGenerator {
         var o2m_fields = []
         var m2o_fields = []
         var m2m_fields = []
-        var addonName = options.addonName || folderName || "my_addon" // namespace
+        var addonName = options.addonName // namespace
         var odooVersion = options.odooVersion
         var model_name_underscore = this.getModelName(elem, options, '_')
         var model_name_dot = this.getModelName(elem, options, '.')
@@ -1078,7 +1062,7 @@ class OdooCodeGenerator {
         }
 
         // get fields names
-        elem.attributes.forEach(function (attr) {
+        elem.attributes.forEach(function(attr) {
             if (attr.name !== '' && attr.name !== undefined && attr.name != '_name' && attr.name != '_inherit') {
                 normal_fields.push(attr)
 
@@ -1097,13 +1081,13 @@ class OdooCodeGenerator {
             }
         })
 
-        var associations = app.repository.getRelationshipsOf(elem, function (rel) {
-            return (rel instanceof type.UMLAssociation)
-        })
-        //looping associations
+        var associations = app.repository.getRelationshipsOf(elem, function(rel) {
+                return (rel instanceof type.UMLAssociation)
+            })
+            //looping associations
         for (var i = 0, len = associations.length; i < len; i++) {
             var asso = associations[i]
-            // if (asso.end1.reference === elem && asso.end2.navigable === true) {
+                // if (asso.end1.reference === elem && asso.end2.navigable === true) {
             if (asso.end1.reference === elem) {
                 // end1 = class ini => Many2one
                 if (asso.end1.name !== "" && asso.end1.name !== undefined) {
@@ -1141,11 +1125,7 @@ class OdooCodeGenerator {
         xmlWriter.indent()
         xmlWriter.writeLine('<field name="name">' + elem_name + '_tree</field>')
         xmlWriter.writeLine('<field name="model">' + model_name_dot + '</field>')
-        if (odooVersion >= 17) {
-            xmlWriter.writeLine('<field name="type">list</field>')
-        } else {
-            xmlWriter.writeLine('<field name="type">tree</field>')
-        }
+        xmlWriter.writeLine('<field name="type">tree</field>')
         xmlWriter.writeLine('<field name="inherit_id" ref="' + ref_tree + '"/>')
         xmlWriter.writeLine('<field name="arch" type="xml">')
         xmlWriter.indent()
@@ -1198,11 +1178,10 @@ class OdooCodeGenerator {
             xmlWriter.writeLine('<field name="name">' + model_name_title + '</field>')
             xmlWriter.writeLine('<field name="type">ir.actions.act_window</field>')
             xmlWriter.writeLine('<field name="res_model">' + model_name_dot + '</field>')
-            if (odooVersion >= 17) {
-                line = '<field name="view_mode">list,form'
-            } else {
-                line = '<field name="view_mode">tree,form'
+            if (odooVersion < 12) {
+                xmlWriter.writeLine('<field name="view_type">form</field>')
             }
+            line = '<field name="view_mode">tree,form'
 
             if (!is_inherit) {
                 line += ',kanban,pivot'
@@ -1247,7 +1226,7 @@ class OdooCodeGenerator {
 
     writeSequenceXML(basePath, elem, options, isInheritedModule, folderName) {
         var state_field_exist = false
-        elem.attributes.forEach(function (attr) {
+        elem.attributes.forEach(function(attr) {
             if (attr.name === 'state') {
                 state_field_exist = true
             }
@@ -1261,7 +1240,7 @@ class OdooCodeGenerator {
         var self = this
         var line = ''
 
-        var addonName = options.addonName || folderName || "my_addon"
+        var addonName = options.addonName
         var model_name_underscore = this.getModelName(elem, options, '_')
         var model_name_dot = this.getModelName(elem, options, '.')
         var model_name_title = this.sentenceCase(elem.name, options)
@@ -1345,7 +1324,7 @@ class OdooCodeGenerator {
         var normal_fields = []
         var o2m_fields = []
         var m2o_fields = []
-        var addonName = options.addonName || folderName || "my_addon"
+        var addonName = options.addonName
         var model_name_underscore = this.getModelName(elem, options, '_')
         var model_name_dot = this.getModelName(elem, options, '.')
         var model_name_title = this.sentenceCase(elem.name, options)
@@ -1355,7 +1334,7 @@ class OdooCodeGenerator {
         var odooVersion = options.odooVersion
 
         // get fields names
-        elem.attributes.forEach(function (attr) {
+        elem.attributes.forEach(function(attr) {
             if (attr.name !== '' && attr.name !== undefined && attr.name != '_name' && attr.name != '_inherit') {
                 normal_fields.push(attr)
 
@@ -1370,13 +1349,13 @@ class OdooCodeGenerator {
             }
         })
 
-        var associations = app.repository.getRelationshipsOf(elem, function (rel) {
-            return (rel instanceof type.UMLAssociation)
-        })
-        //looping associations
+        var associations = app.repository.getRelationshipsOf(elem, function(rel) {
+                return (rel instanceof type.UMLAssociation)
+            })
+            //looping associations
         for (var i = 0, len = associations.length; i < len; i++) {
             var asso = associations[i]
-            // if (asso.end1.reference === elem && asso.end2.navigable === true) {
+                // if (asso.end1.reference === elem && asso.end2.navigable === true) {
             if (asso.end1.reference === elem) {
                 // end1 = class ini => Many2one
                 if (asso.end1.name !== "" && asso.end1.name !== undefined) {
@@ -1438,7 +1417,7 @@ class OdooCodeGenerator {
 
         xmlWriter.writeLine('<div class="row mt32 mb32">')
         xmlWriter.indent()
-        normal_fields.forEach(function (field) {
+        normal_fields.forEach(function(field) {
             if (field.name !== 'name') {
                 xmlWriter.writeLine('<div class="col-auto mw-100 mb-2">')
                 xmlWriter.indent()
@@ -1452,7 +1431,7 @@ class OdooCodeGenerator {
                 xmlWriter.writeLine('</div>')
             }
         })
-        m2o_fields.forEach(function (field) {
+        m2o_fields.forEach(function(field) {
             xmlWriter.writeLine('<div class="col-auto mw-100 mb-2">')
             xmlWriter.indent()
             xmlWriter.writeLine('<strong>' + self.sentenceCase(field.name, options) + '</strong>')
@@ -1469,12 +1448,12 @@ class OdooCodeGenerator {
         xmlWriter.writeLine('<div class="oe_structure"/>')
 
 
-        o2m_fields.forEach(function (field) {
+        o2m_fields.forEach(function(field) {
             var comodel_normal_fields = field._parent.end1.reference.attributes
             var comodel_m2o_fields = []
 
             var end1 = field._parent.end1.reference
-            var associations = app.repository.getRelationshipsOf(end1, function (rel) {
+            var associations = app.repository.getRelationshipsOf(end1, function(rel) {
                 return (rel instanceof type.UMLAssociation)
             })
             xmlWriter.writeLine('<h2>' + self.sentenceCase(field.name, options) + '</h2>')
@@ -1482,7 +1461,7 @@ class OdooCodeGenerator {
             //looping associations
             for (var i = 0, len = associations.length; i < len; i++) {
                 var asso = associations[i]
-                // if (asso.end1.reference === end1 && asso.end2.navigable === true) {
+                    // if (asso.end1.reference === end1 && asso.end2.navigable === true) {
                 if (asso.end1.reference === end1) {
                     // end1 = class ini => Many2one
                     if (asso.end1.name !== "" && asso.end1.name !== undefined) {
@@ -1498,10 +1477,10 @@ class OdooCodeGenerator {
             xmlWriter.indent()
             xmlWriter.writeLine(`<tr>`)
             xmlWriter.indent()
-            comodel_normal_fields.forEach(function (f) {
+            comodel_normal_fields.forEach(function(f) {
                 xmlWriter.writeLine('<td>' + self.sentenceCase(f.name, options) + '</td>')
             })
-            comodel_m2o_fields.forEach(function (f) {
+            comodel_m2o_fields.forEach(function(f) {
                 xmlWriter.writeLine('<td>' + self.sentenceCase(f.name, options) + '</td>')
             })
             xmlWriter.outdent()
@@ -1512,10 +1491,10 @@ class OdooCodeGenerator {
             xmlWriter.indent()
             xmlWriter.writeLine(`<tr t-foreach="doc.` + field.name + `" t-as="line">`)
             xmlWriter.indent()
-            comodel_normal_fields.forEach(function (f) {
+            comodel_normal_fields.forEach(function(f) {
                 xmlWriter.writeLine('<td><span t-field="line.' + f.name + '" /></td>')
             })
-            comodel_m2o_fields.forEach(function (f) {
+            comodel_m2o_fields.forEach(function(f) {
                 xmlWriter.writeLine('<td><span t-field="line.' + f.name + '" /></td>')
             })
             xmlWriter.outdent()
@@ -1559,7 +1538,7 @@ class OdooCodeGenerator {
 
     writeTopMenuXML(xmlWriter, options, folderName) {
         var addonName = folderName
-        var appName = options.appName || folderName
+        var appName = options.appName
         var line = ''
 
         xmlWriter.writeLine('<odoo>')
@@ -1611,26 +1590,17 @@ class OdooCodeGenerator {
         // Package (a directory with __init__.py)
         if (elem instanceof type.UMLPackage) {
             fullPath = path.join(basePath, elem.name)
-            if (!fs.existsSync(fullPath)) {
-                fs.mkdirSync(fullPath, { recursive: true })
-            }
-            if (!fs.existsSync(fullPath + '/model')) fs.mkdirSync(fullPath + '/model', { recursive: true })
-            if (!fs.existsSync(fullPath + '/view')) fs.mkdirSync(fullPath + '/view', { recursive: true })
-            if (!fs.existsSync(fullPath + '/report')) fs.mkdirSync(fullPath + '/report', { recursive: true })
-            if (!fs.existsSync(fullPath + '/security')) fs.mkdirSync(fullPath + '/security', { recursive: true })
-            if (!fs.existsSync(fullPath + '/data')) fs.mkdirSync(fullPath + '/data', { recursive: true })
-
+            fs.mkdirSync(fullPath)
             file = path.join(fullPath, '__init__.py')
-            fs.writeFileSync(file, 'from . import model')
+            fs.writeFileSync(file, '')
             elem.ownedElements.forEach(child => {
-                this.generate(child, fullPath, options, elem.name, false, sequence || 10)
+                this.generate(child, fullPath, options)
             })
 
             // Class for each diagram elements
         } else if (elem instanceof type.UMLClass || elem instanceof type.UMLInterface) {
 
             /// generate py----------------------------
-            if (!fs.existsSync(basePath + '/model')) fs.mkdirSync(basePath + '/model', { recursive: true })
             fullPath = basePath + '/model/' + elem.name + '.py'
             codeWriter = new codegen.CodeWriter(this.getIndentString(options))
             codeWriter.writeLine(options.installPath)
@@ -1645,21 +1615,18 @@ class OdooCodeGenerator {
 
             // if (!inheritedModule) {
             // generate view XML  -------------------------------
-            if (!fs.existsSync(basePath + '/view')) fs.mkdirSync(basePath + '/view', { recursive: true })
             fullPath = basePath + '/view/' + elem.name + '.xml'
             xmlWriter = new codegen.CodeWriter(this.getIndentString(options))
             this.writeXML(xmlWriter, elem, options, folderName, sequence)
             fs.writeFileSync(fullPath, xmlWriter.getData())
 
             /// generate qweb XML-----------------------------------
-            if (!fs.existsSync(basePath + '/report')) fs.mkdirSync(basePath + '/report', { recursive: true })
             fullPath = basePath + '/report/' + elem.name + '.xml'
             xmlWriter = new codegen.CodeWriter(this.getIndentString(options))
             this.writeReport(xmlWriter, elem, options, folderName)
             fs.writeFileSync(fullPath, xmlWriter.getData())
 
             //generate sequences with noupadte=True ------------------------------------
-            if (!fs.existsSync(basePath + '/data')) fs.mkdirSync(basePath + '/data', { recursive: true })
             this.writeSequenceXML(basePath, elem, options, false, folderName);
             // }
 
@@ -1681,13 +1648,13 @@ class OdooCodeGenerator {
     }
 
     lowerFirst(string) {
-        return string.replace(/^[A-Z]/, function (m) {
+        return string.replace(/^[A-Z]/, function(m) {
             return m.toLowerCase();
         });
     }
 
     kebabCase(string) {
-        return this.lowerFirst(string).replace(/([A-Z])/g, function (m, g) {
+        return this.lowerFirst(string).replace(/([A-Z])/g, function(m, g) {
             return '-' + g.toLowerCase();
         }).replace(/[\s\-_]+/g, '-');
     }
@@ -1709,9 +1676,9 @@ class OdooCodeGenerator {
     getModelName(elem, options, separator) {
         var _name_value = ''
         var has_name = false
-        var addonName = options.addonName || "my_addon"
+        var addonName = options.addonName
 
-        elem.attributes.forEach(function (attr) {
+        elem.attributes.forEach(function(attr) {
             if (attr.name == "_name") {
                 has_name = true
                 _name_value = attr.defaultValue
@@ -1738,7 +1705,7 @@ class OdooCodeGenerator {
         var is_inherit = false
         var BreakException = {};
         try {
-            elem.attributes.forEach(function (attr) {
+            elem.attributes.forEach(function(attr) {
                 if (attr.name === '_name' || attr.name === '_inherit') {
                     is_inherit = true
                     throw BreakException
@@ -1768,27 +1735,22 @@ function generate(baseModel, basePath, options) {
     // -------- write main addon folders
     var odooCodeGenerator = new OdooCodeGenerator(baseModel, basePath)
     fullPath = basePath + '/' + baseModel.name
-    if (!fs.existsSync(fullPath)) fs.mkdirSync(fullPath, { recursive: true })
-    if (!fs.existsSync(fullPath + '/model')) fs.mkdirSync(fullPath + '/model', { recursive: true })
-    if (!fs.existsSync(fullPath + '/view')) fs.mkdirSync(fullPath + '/view', { recursive: true })
-    if (!fs.existsSync(fullPath + '/security')) fs.mkdirSync(fullPath + '/security', { recursive: true })
-    if (!fs.existsSync(fullPath + '/report')) fs.mkdirSync(fullPath + '/report', { recursive: true })
-    if (!fs.existsSync(fullPath + '/static')) fs.mkdirSync(fullPath + '/static', { recursive: true })
-    if (!fs.existsSync(fullPath + '/static/description')) fs.mkdirSync(fullPath + '/static/description', { recursive: true })
-    if (!fs.existsSync(fullPath + '/static/js')) fs.mkdirSync(fullPath + '/static/js', { recursive: true })
-    if (!fs.existsSync(fullPath + '/static/xml')) fs.mkdirSync(fullPath + '/static/xml', { recursive: true })
-    if (!fs.existsSync(fullPath + '/data')) fs.mkdirSync(fullPath + '/data', { recursive: true })
+    fs.mkdirSync(fullPath)
+    fs.mkdirSync(fullPath + '/model')
+    fs.mkdirSync(fullPath + '/view')
+    fs.mkdirSync(fullPath + '/security')
+    fs.mkdirSync(fullPath + '/report')
+    fs.mkdirSync(fullPath + '/static')
+    fs.mkdirSync(fullPath + '/static/description')
+    fs.mkdirSync(fullPath + '/static/js')
+    fs.mkdirSync(fullPath + '/static/xml')
+    fs.mkdirSync(fullPath + '/data')
 
     //--------- copy menu icon 
-    if (iconName) {
-        fs.copyFile(__dirname + "/icons/" + iconName + ".png", fullPath + '/static/description/icon.png', function (err) {
-            if (err) {
-                console.error('Error copying icon:', err);
-            } else {
-                console.log('done copy')
-            }
-        })
-    }
+    fs.copyFile(__dirname + "/icons/" + iconName + ".png", fullPath + '/static/description/icon.png', function(err) {
+        if (err) throw err
+        console.log('done copy')
+    })
 
 
     // ------------- write app top menu 
