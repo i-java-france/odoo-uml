@@ -1324,7 +1324,7 @@ class OdooCodeGenerator {
         var normal_fields = []
         var o2m_fields = []
         var m2o_fields = []
-        var addonName = options.addonName
+        var addonName = options.addonName || folderName
         var model_name_underscore = this.getModelName(elem, options, '_')
         var model_name_dot = this.getModelName(elem, options, '.')
         var model_name_title = this.sentenceCase(elem.name, options)
@@ -1648,6 +1648,7 @@ class OdooCodeGenerator {
     }
 
     lowerFirst(string) {
+        if (!string) return ''
         return string.replace(/^[A-Z]/, function (m) {
             return m.toLowerCase();
         });
