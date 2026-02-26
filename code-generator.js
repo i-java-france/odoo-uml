@@ -146,7 +146,7 @@ class OdooCodeGenerator {
      * dijalankan per field elem 
      */
     writeVariable(codeWriter, elem, options, isClassVar, inverse_field, stateExist) {
-        var addonName = options.addonName
+        var addonName = options.addonName || "my_addon"
 
         if (elem.name.length > 0) {
             var line
@@ -411,7 +411,7 @@ class OdooCodeGenerator {
     writeInit(codeWriter, ownedElements, options) {
         var self = this
         var line = ''
-        var addonName = options.addonName
+        var addonName = options.addonName || "my_addon"
         ownedElements.forEach(child => {
             if (child instanceof type.UMLClass) {
                 codeWriter.writeLine('from . import ' + child.name)
@@ -609,7 +609,7 @@ class OdooCodeGenerator {
     writeClass(codeWriter, elem, options) {
         var self = this
         var line = ''
-        var addonName = options.addonName
+        var addonName = options.addonName || "my_addon"
         var odooVersion = options.odooVersion
         var stateExist = false
         var className = elem.name
@@ -713,7 +713,7 @@ class OdooCodeGenerator {
     writeInheritedClass(codeWriter, elem, options) {
         var self = this
         var line = ''
-        var addonName = options.addonName
+        var addonName = options.addonName || "my_addon"
         var state_field_exist = false
 
         // get fields names
@@ -765,7 +765,7 @@ class OdooCodeGenerator {
         var o2m_fields = []
         var m2o_fields = []
         var m2m_fields = []
-        var addonName = options.addonName
+        var addonName = options.addonName || folderName || "my_addon"
         var odooVersion = options.odooVersion
         var model_name_underscore = this.getModelName(elem, options, '_')
         var model_name_dot = this.getModelName(elem, options, '.')
@@ -1030,7 +1030,7 @@ class OdooCodeGenerator {
         var o2m_fields = []
         var m2o_fields = []
         var m2m_fields = []
-        var addonName = options.addonName // namespace
+        var addonName = options.addonName || folderName || "my_addon" // namespace
         var odooVersion = options.odooVersion
         var model_name_underscore = this.getModelName(elem, options, '_')
         var model_name_dot = this.getModelName(elem, options, '.')
@@ -1261,7 +1261,7 @@ class OdooCodeGenerator {
         var self = this
         var line = ''
 
-        var addonName = options.addonName
+        var addonName = options.addonName || folderName || "my_addon"
         var model_name_underscore = this.getModelName(elem, options, '_')
         var model_name_dot = this.getModelName(elem, options, '.')
         var model_name_title = this.sentenceCase(elem.name, options)
@@ -1345,7 +1345,7 @@ class OdooCodeGenerator {
         var normal_fields = []
         var o2m_fields = []
         var m2o_fields = []
-        var addonName = options.addonName
+        var addonName = options.addonName || folderName || "my_addon"
         var model_name_underscore = this.getModelName(elem, options, '_')
         var model_name_dot = this.getModelName(elem, options, '.')
         var model_name_title = this.sentenceCase(elem.name, options)
@@ -1709,7 +1709,7 @@ class OdooCodeGenerator {
     getModelName(elem, options, separator) {
         var _name_value = ''
         var has_name = false
-        var addonName = options.addonName
+        var addonName = options.addonName || "my_addon"
 
         elem.attributes.forEach(function (attr) {
             if (attr.name == "_name") {
