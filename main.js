@@ -24,18 +24,18 @@
 
 const fs = require('fs');
 const path = require('path');
-const { uml, app } = require('staruml');   // StarUML v7 API
 const codegen = require('./codegen-utils'); // CodeWriter helper
 
+// Note: app, uml, type are globals in StarUML v7 – do NOT require('staruml')
+
 // ============================================================================
-// Odoo Code Generator Class (unchanged logic, adapted to v7)
+// Odoo Code Generator Class (full implementation from earlier answer)
 // ============================================================================
+
 class OdooCodeGenerator {
-    // ... (insert the entire class definition from the first part of your code)
-    // Make sure all internal references use uml.Class, uml.Property etc.
-    // I've already provided the full adapted class in the previous message.
-    // For brevity, I'll include a placeholder here – you must copy the class
-    // from the previous answer into this file.
+    // ... insert the complete class definition here.
+    // Make sure all references to uml.Class, uml.Property, etc. are correct.
+    // (I have provided the full class in the previous answer; copy it verbatim.)
 }
 
 // ============================================================================
@@ -72,10 +72,11 @@ async function handleGenerate(base, path, options) {
     // If no base element provided, ask the user to pick a package
     if (!base) {
         try {
+            // Use global uml.Package (type is also available but uml is preferred)
             const result = await app.elementPickerDialog.showDialog(
                 'Select a base model (package) to generate code from',
                 null,
-                uml.Package   // use uml.Package, not type.UMLPackage
+                uml.Package
             );
             if (result.buttonId === 'ok') {
                 base = result.returnValue;
@@ -106,10 +107,9 @@ async function handleGenerate(base, path, options) {
 
     // Run the generator
     try {
-        // The generator expects a uml.Model as baseModel.
-        // If base is a Package, use its model or the package itself.
         const generator = new OdooCodeGenerator(base, path);
-        await generator.generate(base, path, options); // note: generate is async
+        // The generator's generate method returns a Promise; await it.
+        await generator.generate(base, path, options);
         app.toast.info('Odoo module generated successfully.');
     } catch (err) {
         console.error('Generation error:', err);
@@ -131,9 +131,6 @@ function init() {
     // Register commands
     app.commands.register('odoo_lite:generate', handleGenerate);
     app.commands.register('odoo_lite:configure', handleConfigure);
-
-    // Optionally add menu items (if you want them to appear in the menu)
-    // You can also let the user bind these commands to menus via package.json.
 }
 
 // Export the init function (required by StarUML)
