@@ -1,20 +1,12 @@
 {
-    "name": "abdelhadi.staruml-odoo",
-    "title": "Odoo Lite",
-    "description": "Odoo code generator lite",
-    "homepage": "https://github.com/akhdaniel/staruml-odoo",
-    "issues": "https://github.com/akhdaniel/staruml-odoo/issues",
-    "keywords": [
-        "odoo"
-    ],
-    "version": "0.9.1",
-    "author": {
-        "name": "Akhmad D. Sembiring",
-        "email": "akhmad.daniel@gmail.com",
-        "url": "https://github.com/akhdaniel"
-    },
-    "license": "MIT",
-    "engines": {
-        "staruml": "^7.0.0"
-    }
+  "name": "odoo-generator",
+  "title": "Odoo Generator",
+  "version": "1.10.0",
+  "description": "Generate Odoo modules from UML diagrams",
+  "main": "main.js",
+  "author": "vitraining.com",
+  "engines": {
+    "staruml": "^7.0.0"
+  },
+  "categories": ["Code Generation"]
 }
